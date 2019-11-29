@@ -11,6 +11,9 @@ class Led:
 
 class LEDMatrix:
 
+    def setLED(self, x, y, color):
+        self.Leds[x + y*self.maxLed].color = color
+
     def setAll(self, color):
         for led in self.Leds:
             led.color = color

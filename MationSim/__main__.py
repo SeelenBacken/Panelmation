@@ -21,8 +21,13 @@ class MationSim:
                     c, addr = connection.accept()
                     received = c.recv(1204).decode('UTF-8').split()
                     if received[0] == 'setAll':
-                        print('Incoming: {}'.format(received[0]))
+                        print('Incoming: {}'.format(received))
                         self.matrix.setAll((int(received[1]), int(received[2]), int(received[3])))
+                    elif received[0] == 'setLED':
+                        print('Incoming: {}'.format(received))
+                        self.matrix.setLED(int(received[1]), int(received[2]), (int(received[3]), int(received[4]),
+                                                                                int(received[5])))
+
             except Exception as ex:
                 i = 1
             count = -1
