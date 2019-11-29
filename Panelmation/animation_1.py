@@ -7,4 +7,3 @@ class animation:
     
     def __init__(self):
         self.sim = MationSim()
-        

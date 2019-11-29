@@ -1,15 +1,10 @@
 import pygame
 import sys
-from MationSim.leds import Line as Line
-from MationSim.leds import Led as Led
-from MationSim.leds import hLine as hLine
-from threading import Thread
-from multiprocessing import Process
-from time import sleep
 import socket
+from MationSim import leds
+
 
 class MationSim:
-
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
     RED = (255, 0, 0)
@@ -19,79 +14,38 @@ class MationSim:
     LineNr = 25
     LedNr = 60
 
-    def setPixel(self, x, y, color):
-        self.Leds[y][x].color = color
-        print(self.Leds[y][x].color)
-        
-    def start(self):
-        self.p.start()
-        self.q.start()
-        
     def startThread(self, connection):
         while True:
             try:
                 if connection:
                     c, addr = connection.accept()
-                    self.hLines[3].setColor(MationSim.BLUE)                
+                    received = c.recv(1204).decode('UTF-8').split()
+                    if received[0] == 'setAll':
+                        print('Incoming: {}'.format(received[0]))
+                        self.matrix.setAll((int(received[1]), int(received[2]), int(received[3])))
             except Exception as ex:
-                print(ex)
+                i = 1
             count = -1
-            for lineNr in self.Leds:
-                count += 1
-                for ledNr in self.Leds[count]:
-                    pygame.draw.circle(self.windowSurface, ledNr.color,\
-                                       (ledNr.x, ledNr.y), 6)
-            #for lx in Leds:
-             #   pygame.draw.circle(windowSurface, lx.color, (lx.x, lx.y), 6)
+            for led in self.matrix.Leds:
+                pygame.draw.circle(self.windowSurface, led.color, (led.x, led.y), 6)
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     connection.close()
                     pygame.quit()
                     sys.exit()
-                    
-    def sThread(self):
-        count = 0
-        while True:
-            print(count)
-            count += 1
-            if count >= 10:
-                break
 
     def __init__(self):
-        self.Leds = []
-        self.Lines = []
-        
-        self.LineNr = 25
-        self.LedNr = 60
-        
+
         RED = (255, 0, 0)
-        
+
         connection = socket.socket()
-        connection.bind(('localhost', 6018))
+        connection.bind(('192.168.0.67', 6019))
         connection.listen(5)
         connection.setblocking(0)
 
-        
-        for x in range(self.LineNr):
-            temp = []
-            tempLine = Line(x)
-            self.Lines.append(tempLine)
-            for y in range(self.LedNr):
-                temp.append(Led(y, tempLine, RED))
-            self.Leds.append(temp)
-            
-        count=-1
-        self.hLines = []
-        for x in range(self.LineNr):
-            temp = []
-            count += 1
-            for y in self.Leds[count]:
-                temp.append(y)
-            tempLine = hLine(count, temp)
-            self.hLines.append(tempLine)
-        
-        hLine.hLines = self.hLines
+        self.matrix = leds.LEDMatrix()
+
         pygame.init()
 
         BLACK = (0, 0, 0)
@@ -100,15 +54,10 @@ class MationSim:
         GREEN = (0, 255, 0)
         BLUE = (0, 0, 255)
 
-        self.windowSurface = pygame.display.set_mode((self.LedNr*18+100, self.LineNr*18+100), 0, 32)
+        self.windowSurface = pygame.display.set_mode((self.LedNr * 18 + 100, self.LineNr * 18 + 100), 0, 32)
         pygame.display.set_caption('MotionSim')
 
         basicFont = pygame.font.SysFont(None, 48)
 
-        self.windowSurface.fill(BLACK)
-        self.hLines[2].setColor(GREEN)
-        
-        self.p = Process(target=self.sThread())
-        self.q = Process(target=self.startThread(connection))
-        
-
+        self.windowSurface.fill((47, 55, 55))
+        self.startThread(connection)

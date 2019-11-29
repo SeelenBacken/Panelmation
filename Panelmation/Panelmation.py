@@ -1,6 +1,3 @@
-from MationSim.__main__ import MationSim
-from time import sleep
-from threading import Thread
 from animation_1 import animation as anim
 """
 sim = MationSim()

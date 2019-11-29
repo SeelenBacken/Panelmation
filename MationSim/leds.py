@@ -3,24 +3,25 @@ class Line:
         self.nr = LineNr
 
 class Led:
-    def __init__(self, LedNr, line, color):
+    def __init__(self, LedNr, x, y, color):
         self.nr = LedNr
-        self.line = line
-        self.y = self.line.nr*18+50
-        self.x = self.nr*18+50
+        self.y = y
+        self.x = x
         self.color = color
 
-class hLine:
-    hLines = None
-    
-    def sethLines(self, hLineList):
-        hLine.hLines = hLineList
-        
-    def setColor(self, color):
+class LEDMatrix:
+
+    def setAll(self, color):
         for led in self.Leds:
             led.color = color
-    
-    def __init__(self, LineNr, Leds):
-        self.Leds = Leds
-        self.nr = LineNr
-        self.color = None
+
+    def __init__(self):
+        self.Leds = []
+        self.Lines = []
+
+        self.maxRow = 25
+        self.maxLed = 60
+
+        for y in range(self.maxRow):
+            for x in range(self.maxLed):
+                self.Leds.append(Led(x*y, x*18+50, y*18+50, (0, 0, 0)))
