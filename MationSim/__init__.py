@@ -1,1 +1,1 @@
-from MationSim import __main__
+from MationSim import MationSim

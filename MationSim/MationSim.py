@@ -1,7 +1,9 @@
 import pygame
 import sys
-import socket
 from MationSim import leds
+import threading
+import websockets
+import asyncio
 
 
 class MationSim:
@@ -14,40 +16,27 @@ class MationSim:
     LineNr = 25
     LedNr = 60
 
-    def startThread(self, connection):
+    def startThread(self):
         while True:
-            try:
-                if connection:
-                    c, addr = connection.accept()
-                    received = c.recv(1204).decode('UTF-8').split()
-                    if received[0] == 'setAll':
-                        print('Incoming: {}'.format(received))
-                        self.matrix.setAll((int(received[1]), int(received[2]), int(received[3])))
-                    elif received[0] == 'setLED':
-                        print('Incoming: {}'.format(received))
-                        self.matrix.setLED(int(received[1]), int(received[2]), (int(received[3]), int(received[4]),
-                                                                                int(received[5])))
-
-            except Exception as ex:
-                i = 1
             count = -1
             for led in self.matrix.Leds:
                 pygame.draw.circle(self.windowSurface, led.color, (led.x, led.y), 6)
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    connection.close()
                     pygame.quit()
                     sys.exit()
+
+    async def on_message(self, ws, path):
+        async for text in ws:
+            textArr = text.split()
+            if textArr[0] == 'setLED':
+                for x in range(int(textArr[1])):
+                    self.matrix.setLED(int(textArr[x*5+2]), int(textArr[x*5+3]), (int(textArr[x*5+4]), int(textArr[x*5+5]), int(textArr[x*5+6])))
 
     def __init__(self):
 
         RED = (255, 0, 0)
-
-        connection = socket.socket()
-        connection.bind(('192.168.0.67', 6019))
-        connection.listen(5)
-        connection.setblocking(0)
 
         self.matrix = leds.LEDMatrix()
 
@@ -65,4 +54,12 @@ class MationSim:
         basicFont = pygame.font.SysFont(None, 48)
 
         self.windowSurface.fill((47, 55, 55))
-        self.startThread(connection)
+
+        mainThread = threading.Thread(target=self.startThread)
+        mainThread.start()
+
+        ws = websockets.serve(self.on_message, "localhost", 8765)
+        asyncio.get_event_loop().run_until_complete(ws)
+
+        wst = threading.Thread(target=asyncio.get_event_loop().run_forever())
+        wst.start()

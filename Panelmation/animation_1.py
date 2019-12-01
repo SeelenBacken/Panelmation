@@ -1,4 +1,4 @@
-from MationSim.__main__ import MationSim
+import MationSim
 import asyncio
 
 class animation:
@@ -6,4 +6,4 @@ class animation:
         self.sim.start()
     
     def __init__(self):
-        self.sim = MationSim()
+        self.sim = MationSim.MationSim.MationSim()
